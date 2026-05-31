@@ -3,25 +3,41 @@ version: '3'
 volumes:
   pg_data:
   static:
+  media:
 
 services:
   db:
     image: postgres:13
+    container_name: db
+    env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
+
   backend:
     build: ./backend/
+    image: kittygram_backend
+    container_name: backend
     env_file: .env
-  frontend:
-    env_file: .env
-    build: ./frontend/
-    command: cp -r /app/build/. /static/
     volumes:
-      - static:/static
+      - media:/app/media/
+      - static:/app/staticfiles/
+
+  frontend:
+    build: ./frontend/
+    image: kittygram_frontend
+    container_name: frontend
+    env_file: .env
+    command: cp -r /app/build/. /static/ 
+    volumes:
+      - static:/static/
+
   gateway:
     build: ./nginx/
+    image: kittygram_gateway
+    container_name: gateway
     env_file: .env
     ports:
-      - 9000:80
+      - 8000:80
     volumes:
-      - static:/static
+      - static:/staticfiles/ # Nginx видит статику здесь
+      - media:/media/
